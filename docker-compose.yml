@@ -1,54 +1,71 @@
-version: '3.1'
-
+version: '3'
 services:
 
-  #Spring Service
-  cameinw-backend:
-    image: cameinw-backend
+  # Spring Service
+  app:
+    container_name: cameinw-app
     build:
       context: ./cameinw-backend
-      dockerfile: ./cameinw.Dockerfile
-    container_name: cameinw-app
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    env_file:
+      - .env
+    environment:
+      - SERVICE_NAME=${SPRING_SERVICE_NAME}
+      - SERVICE_TAGS=${SPRING_SERVICE_TAGS}
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=${SPRING_JPA_HIBERNATE_DDL_AUTO}
     tty: true
     depends_on:
-      - cameinw-db
-    ports:
-      - 8090:8080
-    environment:
-      MYSQL_HOST: cameinw-db
-      MYSQL_USER: root
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_PORT: 3306
-      SERVICE_NAME: backend
-      SERVICE_TAGS: dev
-    stdin_open: true
+      - db
     networks:
       - cameinw-net
     restart: on-failure
 
   # MySQL Service
-  cameinw-db:
+  db:
     image: mysql:latest
     container_name: cameinw-db
-    command: --skip-host-cache --skip-name-resolve
+    volumes:
+      - db_data:/var/lib/mysql
+    env_file:
+      - .env
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - SERVICE_TAGS=${MYSQL_SERVICE_TAGS}
+      - SERVICE_NAME=${MYSQL_SERVICE_NAME}
     tty: true
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-proot"]
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-proot" ]
       interval: 20s
       timeout: 10s
       retries: 5
-    ports:
-      - 3306:3306
-    environment:
-      MYSQL_DATABASE: cameinw_db
-      MYSQL_ROOT_PASSWORD: root
-      SERVICE_TAGS: dev
-      SERVICE_NAME: mysql
+    restart: unless-stopped
     networks:
       - cameinw-net
+
+
+  # PHPMyAdmin Service
+  phpMyAdmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: cameinw-phpMyAdmin
+
+    ports:
+      - "8085:80"
+    links:
+      - db
     restart: unless-stopped
+    networks:
+      - cameinw-net
+
 
 #Docker Networks
 networks:
   cameinw-net:
     driver: bridge
+volumes:
+  db_data:
