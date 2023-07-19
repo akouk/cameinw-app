@@ -19,6 +19,8 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=${SPRING_JPA_HIBERNATE_DDL_AUTO}
     tty: true
+    volumes:
+      - ./cameinw-backend/certs:/app/certs
     depends_on:
       - db
     networks:
@@ -30,14 +32,17 @@ services:
     image: mysql:latest
     container_name: cameinw-db
     volumes:
-      - db_data:/var/lib/mysql
+      - ./mysql/dbdata/:/var/lib/mysql/
+      - ./mysql/my.cnf:/etc/mysql/my.cnf
+    ports:
+      - "4306:3306"
     env_file:
       - .env
     environment:
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - SERVICE_TAGS=${MYSQL_SERVICE_TAGS}
       - SERVICE_NAME=${MYSQL_SERVICE_NAME}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     tty: true
     healthcheck:
       test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-proot" ]
@@ -53,7 +58,6 @@ services:
   phpMyAdmin:
     image: phpmyadmin/phpmyadmin:latest
     container_name: cameinw-phpMyAdmin
-
     ports:
       - "8085:80"
     links:
@@ -67,5 +71,3 @@ services:
 networks:
   cameinw-net:
     driver: bridge
-volumes:
-  db_data:
