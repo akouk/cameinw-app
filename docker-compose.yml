@@ -8,19 +8,12 @@ services:
       context: ./cameinw-backend
       dockerfile: Dockerfile
     ports:
-      - 8080:8080
-    env_file:
-      - .env
+      - "8443:8443"
     environment:
-      - SERVICE_NAME=${SPRING_SERVICE_NAME}
-      - SERVICE_TAGS=${SPRING_SERVICE_TAGS}
-      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
-      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      - TZ=Europe/Athens
+      - SERVICE_NAME=backend
+      - SERVICE_TAGS=dev
     tty: true
-    volumes:
-      - ./cameinw-backend/certs:/app/certs
     depends_on:
       - db
     networks:
@@ -36,16 +29,14 @@ services:
       - ./mysql/my.cnf:/etc/mysql/my.cnf
     ports:
       - "4306:3306"
-    env_file:
-      - .env
     environment:
-      - SERVICE_TAGS=${MYSQL_SERVICE_TAGS}
-      - SERVICE_NAME=${MYSQL_SERVICE_NAME}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - SERVICE_TAGS=mysql
+      - SERVICE_NAME=dev
+      - MYSQL_DATABASE=cameinwdb
+      - MYSQL_ROOT_PASSWORD=B8tIKY82N4XFT47y
     tty: true
     healthcheck:
-      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-proot" ]
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-pB8tIKY82N4XFT47y" ]
       interval: 20s
       timeout: 10s
       retries: 5
